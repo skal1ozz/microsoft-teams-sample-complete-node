@@ -434,6 +434,17 @@ export class AdaptiveCardDialog extends TriggerActionDialog {
                         url: "http://adaptivecards.io/explorer/Action.OpenUrl.html",
                         title: "Open Url",
                     },
+                    {
+                        type: "Action.Submit",
+                        title: "Task",
+                        speak: "<s>Search</s>",
+                        data: {
+                            "msteams": {
+                                "type": "task/fetch",
+                            },
+                            "messageId": "12345",
+                        },
+                    },
                 ],
             },
         };

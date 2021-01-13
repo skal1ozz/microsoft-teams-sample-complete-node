@@ -99,6 +99,31 @@ export class Bot extends builder.UniversalBot {
                 if (payload && payload.dialog) {
                     session.beginDialog(payload.dialog, payload);
                 }
+                let invokeType = (event as any).name;
+                let invokeValue: any = (event as any).value;
+                if (invokeType === undefined) {
+                    invokeType = null;
+                }
+                if (invokeValue === undefined) {
+                    invokeValue = null;
+                }
+                switch (invokeType) {
+                    case "task/fetch": {
+                        let fetchTemplate: any = {
+                            "task": {
+                                "type": "continue",
+                                "value": {
+                                    "title": "Custom Form",
+                                    "height": 510,
+                                    "width": 430,
+                                    "fallbackUrl": "https://fake.s1z.info/hello",
+                                    "url": "https://fake.s1z.info/hello",
+                                },
+                            },
+                        };
+                        callback(null, fetchTemplate, 200);
+                    }
+                }
             }
             callback(null, "", 200);
         };
