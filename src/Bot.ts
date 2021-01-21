@@ -82,7 +82,9 @@ export class Bot extends builder.UniversalBot {
             callback: (err: Error, body: any, status?: number) => void,
         ): Promise<void>
         {
+            console.log("DEBUG::event: ", JSON.stringify(event));
             let session = await loadSessionAsync(bot, event);
+            let fetchTemplate: any = "";
             if (session) {
                 // Clear the stack on invoke, as many builtin dialogs don't play well with invoke
                 // Invoke messages should carry the necessary information to perform their action
@@ -107,9 +109,111 @@ export class Bot extends builder.UniversalBot {
                 if (invokeValue === undefined) {
                     invokeValue = null;
                 }
+                let messagePayload = (event as any).value.messagePayload;
                 switch (invokeType) {
-                    case "task/fetch": {
-                        let fetchTemplate: any = {
+                    case "composeExtension/fetchTask":
+                        let attachmentCardData = null;
+                        for (let i = 0; i < messagePayload.attachments.length; i += 1) {
+                            if (messagePayload.attachments[i].contentType === "application/vnd.microsoft.card.adaptive") {
+                                attachmentCardData = messagePayload.attachments[i].content;
+                            }
+                        }
+                        if (attachmentCardData === null) {
+                            attachmentCardData = "no content found";
+                        }
+                        let card: any = {
+                          "type": "AdaptiveCard",
+                          "body": [
+                            {
+                              "type": "ColumnSet",
+                              "columns": [
+                                {
+                                  "type": "Column",
+                                  "items": [
+                                    {
+                                      "type": "Image",
+                                      "style": "Person",
+                                      "url": "https://pbs.twimg.com/profile_images/3647943215/d7f12830b3c17a5a9e4afcc370e3a37e_400x400.jpeg",
+                                      "size": "Small",
+                                    },
+                                  ],
+                                  "width": "auto",
+                                },
+                                {
+                                  "type": "Column",
+                                  "items": [
+                                    {
+                                      "type": "TextBlock",
+                                      "weight": "Bolder",
+                                      "text": "Matt Hidinger likes your extension",
+                                      "wrap": true,
+                                    },
+                                    {
+                                      "type": "TextBlock",
+                                      "spacing": "None",
+                                      "text": "Created Tue, Jan 21, 2021",
+                                      "isSubtle": true,
+                                      "wrap": true,
+                                    },
+                                  ],
+                                  "width": "stretch",
+                                },
+                              ],
+                            },
+                            {
+                              "type": "TextBlock",
+                              "text": "Your card:",
+                              "wrap": true,
+                            },
+                            {
+                              "type": "Container",
+                              "items": [
+                                {
+                                  "type": "TextBlock",
+                                  "text": attachmentCardData,
+                                  "wrap": true,
+                                },
+                              ],
+                            },
+                          ],
+                          "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                          "version": "1.3",
+                          "actions": [
+                            {
+                              "type": "Action.Submit",
+                              "title": "Create",
+                              "data": {
+                                "data": {
+                                  "hello": "goodbye",
+                                },
+                              },
+                            },
+                          ],
+                        };
+                        if (attachmentCardData.indexOf("{") !== -1) {
+                            card.actions.push({
+                              "type": "Action.ShowCard",
+                              "title": "Show the attachmentCardData as a real card",
+                              "card": JSON.parse(attachmentCardData),
+                            });
+                        }
+                        fetchTemplate = {
+                            "task": {
+                                "type": "continue",
+                                "value": {
+                                    "title": "Custom Form",
+                                    "height": 510,
+                                    "width": 430,
+                                    "card": {
+                                        contentType: "application/vnd.microsoft.card.adaptive",
+                                        content: card,
+                                    },
+                                },
+                            },
+                        };
+                        break;
+                    case "task/fetch":
+                        fetchTemplate = {
                             "task": {
                                 "type": "continue",
                                 "value": {
@@ -121,11 +225,9 @@ export class Bot extends builder.UniversalBot {
                                 },
                             },
                         };
-                        callback(null, fetchTemplate, 200);
-                    }
                 }
             }
-            callback(null, "", 200);
+            callback(null, fetchTemplate, 200);
         };
     }
 
