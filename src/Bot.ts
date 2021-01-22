@@ -70,7 +70,8 @@ export class Bot extends builder.UniversalBot {
         // next to the compose extension's name on the list of compose extensions
         // onSettingsUpdate is only used for the response from the popup created by the
         // onQuerySettingsUrl event
-        this._connector.onQuery("search123", ComposeExtensionHandlers.getOnQueryHandler(this));
+
+        // this._connector.onQuery("Unique_1", ComposeExtensionHandlers.getOnQueryHandler(this));
         this._connector.onQuerySettingsUrl(ComposeExtensionHandlers.getOnQuerySettingsUrlHandler());
         this._connector.onSettingsUpdate(ComposeExtensionHandlers.getOnSettingsUpdateHandler(this));
     }
@@ -111,11 +112,22 @@ export class Bot extends builder.UniversalBot {
                 }
                 let messagePayload = (event as any).value.messagePayload;
                 switch (invokeType) {
+                    case "composeExtension/query":
+                        fetchTemplate = teams.ComposeExtensionResponse.result("list").attachments([
+                            new builder.ThumbnailCard()
+                                       .title("Test thumbnail card")
+                                       .text("This is a test thumbnail card")
+                                       .images([new builder.CardImage().url("https://bot-framework.azureedge.net/bot-icons-v1/bot-framework-default-9.png")])
+                                       .toAttachment(),
+                        ]).toResponse();
+                        break;
                     case "composeExtension/fetchTask":
                         let attachmentCardData = null;
-                        for (let i = 0; i < messagePayload.attachments.length; i += 1) {
-                            if (messagePayload.attachments[i].contentType === "application/vnd.microsoft.card.adaptive") {
-                                attachmentCardData = messagePayload.attachments[i].content;
+                        if (messagePayload) {
+                            for (let i = 0; i < messagePayload.attachments.length; i += 1) {
+                                if (messagePayload.attachments[i].contentType === "application/vnd.microsoft.card.adaptive") {
+                                    attachmentCardData = messagePayload.attachments[i].content;
+                                }
                             }
                         }
                         if (attachmentCardData === null) {
@@ -227,6 +239,8 @@ export class Bot extends builder.UniversalBot {
                         };
                 }
             }
+            console.log("========================");
+            console.log("callback:", fetchTemplate);
             callback(null, fetchTemplate, 200);
         };
     }
